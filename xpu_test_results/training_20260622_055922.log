@@ -1,0 +1,59 @@
+2026-06-22 05:59:22,039 - __main__ - INFO - ======================================================================
+2026-06-22 05:59:22,039 - __main__ - INFO - DINGO-T1 XPU HARDWARE TEST
+2026-06-22 05:59:22,039 - __main__ - INFO - Start time: 2026-06-22T05:59:22.039938
+2026-06-22 05:59:22,040 - __main__ - INFO - ======================================================================
+2026-06-22 05:59:22,441 - __main__ - INFO - ✓ XPU device detected and initialized
+2026-06-22 05:59:22,446 - __main__ - INFO -   GPU: Intel(R) Graphics [0x56a1]
+2026-06-22 05:59:22,446 - __main__ - INFO - Loading configuration from dingo-T1/01_paper_settings/01_training/03_training/train_settings_xpu_hardware_test.yaml
+2026-06-22 05:59:22,454 - __main__ - INFO - ✓ Configuration loaded
+2026-06-22 05:59:22,454 - __main__ - INFO - Building model from configuration...
+2026-06-22 05:59:26,447 - __main__ - INFO - Loading pre-trained weights from dingo-T1/02_inference_with_pretrained_model/dingo_t1.pt
+2026-06-22 05:59:28,316 - __main__ - INFO - ✓ Pre-trained weights loaded successfully
+2026-06-22 05:59:28,318 - __main__ - INFO - Freezing all layers except the last 2 transformer blocks...
+2026-06-22 05:59:28,318 - __main__ - INFO - ✓ Froze all except last 2 layers using TransformerModel.freeze_all_except_last_n_layers()
+2026-06-22 05:59:28,319 - __main__ - INFO - 
+Frozen status summary:
+2026-06-22 05:59:28,319 - __main__ - INFO -   tokenizer                     : trainable=         0, frozen= 1,080,832
+2026-06-22 05:59:28,319 - __main__ - INFO -   transformer_layer_0           : trainable=         0, frozen= 8,399,872
+2026-06-22 05:59:28,319 - __main__ - INFO -   transformer_layer_1           : trainable=         0, frozen= 8,399,872
+2026-06-22 05:59:28,319 - __main__ - INFO -   transformer_layer_2           : trainable=         0, frozen= 8,399,872
+2026-06-22 05:59:28,319 - __main__ - INFO -   transformer_layer_3           : trainable=         0, frozen= 8,399,872
+2026-06-22 05:59:28,319 - __main__ - INFO -   transformer_layer_4           : trainable=         0, frozen= 8,399,872
+2026-06-22 05:59:28,319 - __main__ - INFO -   transformer_layer_5           : trainable=         0, frozen= 8,399,872
+2026-06-22 05:59:28,319 - __main__ - INFO -   transformer_layer_6           : trainable= 8,399,872, frozen=         0
+2026-06-22 05:59:28,319 - __main__ - INFO -   transformer_layer_7           : trainable= 8,399,872, frozen=         0
+2026-06-22 05:59:28,319 - __main__ - INFO -   final_net                     : trainable=         0, frozen=   131,200
+2026-06-22 05:59:28,319 - __main__ - INFO -   TOTAL                         : trainable=16,799,744, frozen=51,611,264
+2026-06-22 05:59:28,319 - __main__ - INFO -   Freezing efficiency: 75.4% frozen
+2026-06-22 05:59:28,325 - __main__ - INFO - 
+======================================================================
+2026-06-22 05:59:28,325 - __main__ - INFO - DINGO-T1 HARDWARE TEST - MODEL SUMMARY
+2026-06-22 05:59:28,325 - __main__ - INFO - ======================================================================
+2026-06-22 05:59:28,325 - __main__ - INFO - Total parameters:     160,030,412
+2026-06-22 05:59:28,325 - __main__ - INFO - Trainable parameters: 108,419,148 (67.75%)
+2026-06-22 05:59:28,325 - __main__ - INFO - Frozen parameters:    51,611,264 (32.25%)
+2026-06-22 05:59:28,325 - __main__ - INFO - 
+Batch size:           64
+2026-06-22 05:59:28,325 - __main__ - INFO - Num epochs:           20
+2026-06-22 05:59:28,325 - __main__ - INFO - NSF flow steps:       15
+2026-06-22 05:59:28,325 - __main__ - INFO - Device:               xpu
+2026-06-22 05:59:28,325 - __main__ - INFO - ======================================================================
+
+2026-06-22 05:59:28,325 - __main__ - INFO - Testing forward pass with dummy data...
+2026-06-22 05:59:36,404 - __main__ - INFO - ✓ Forward pass successful
+2026-06-22 05:59:36,404 - __main__ - INFO -   Output shape: torch.Size([64])
+2026-06-22 05:59:36,404 - __main__ - INFO -   Logging info: {'num_tokens': 8192, 'num_all_tokens': 8192}
+2026-06-22 05:59:36,405 - __main__ - INFO - Testing backward pass (gradient flow)...
+2026-06-22 05:59:39,991 - __main__ - INFO - ✓ Backward pass successful
+2026-06-22 05:59:39,992 - __main__ - INFO -   Parameters with gradients: 1769
+2026-06-22 05:59:39,992 - __main__ - INFO - 
+======================================================================
+2026-06-22 05:59:39,992 - __main__ - INFO - HARDWARE TEST COMPLETE
+2026-06-22 05:59:39,992 - __main__ - INFO - Log file: xpu_test_results/training_20260622_055922.log
+2026-06-22 05:59:39,992 - __main__ - INFO - ======================================================================
+2026-06-22 05:59:39,992 - __main__ - INFO - 
+Next steps:
+2026-06-22 05:59:39,992 - __main__ - INFO - 1. If forward/backward passes succeeded, you can proceed with full training
+2026-06-22 05:59:39,992 - __main__ - INFO - 2. Use dingo_pipe with the XPU config to run actual training:
+2026-06-22 05:59:39,992 - __main__ - INFO -    dingo_pipe dingo-T1/01_paper_settings/01_training/03_training/train_settings_xpu_hardware_test.yaml
+2026-06-22 05:59:39,992 - __main__ - INFO - ======================================================================

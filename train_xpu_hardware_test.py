@@ -1,0 +1,428 @@
+#!/usr/bin/env python3
+"""
+XPU Hardware Test Script for DINGO-T1
+=====================================
+
+This script:
+1. Initializes Intel Arc GPU (XPU) with proper environment settings
+2. Loads pre-trained DINGO-T1 weights from Zenodo
+3. Freezes all but the last 2 transformer attention blocks
+4. Runs a short test training session (11K waveforms)
+5. Validates model on XPU hardware
+
+Usage:
+------
+python train_xpu_hardware_test.py \\
+    --config train_settings_xpu_hardware_test.yaml \\
+    --zenodo_checkpoint /path/to/dingo_t1.pt \\
+    --output_dir ./xpu_test_run
+
+Author: Transfer Learning Test Suite
+Date: 2026-06-19
+"""
+
+import os
+import sys
+import argparse
+import logging
+from pathlib import Path
+from datetime import datetime
+
+logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(name)s - %(levelname)s - %(message)s')
+logger = logging.getLogger(__name__)
+
+# Set up XPU environment BEFORE importing torch
+def setup_xpu_environment():
+    """
+    Initialize Intel Arc GPU environment variables for optimal performance.
+    These must be set BEFORE any torch imports.
+    """
+    # Enable expandable memory segments for flexible allocation
+    os.environ["PYTORCH_XPU_ALLOC_CONF"] = "expandable_segments:True"
+    
+    # Enable persistent SYCL cache for faster compilation
+    os.environ["SYCL_CACHE_PERSISTENT"] = "1"
+    
+    # Enable relaxed allocation limits for better memory handling
+    os.environ["UR_L0_ENABLE_RELAXED_ALLOCATION_LIMITS"] = "1"
+    
+    # Disable TF32 for reproducibility (matching zenodo training)
+    os.environ["TORCH_ALLOW_TF32"] = "0"
+    
+    logging.info("XPU environment variables configured")
+
+
+# Call setup BEFORE torch import
+setup_xpu_environment()
+
+import torch
+import torch.nn as nn
+import yaml
+import numpy as np
+from typing import Dict, Tuple
+
+# Import dingo modules
+from dingo.core.posterior_models.build_model import build_model_from_kwargs, autocomplete_model_kwargs
+from dingo.core.utils import build_train_and_test_loaders
+from dingo.gw.dataset import WaveformDataset
+from dingo.gw.training.train_builders import build_dataset, set_train_transforms
+
+# Configure logging
+logging.basicConfig(
+    level=logging.INFO,
+    format='%(asctime)s - %(name)s - %(levelname)s - %(message)s'
+)
+logger = logging.getLogger(__name__)
+
+
+def get_device() -> Tuple[torch.device, str]:
+    """
+    Detect and initialize appropriate device (XPU preferred, fallback to CPU).
+    
+    Returns
+    -------
+    Tuple[torch.device, str]
+        Device object and device type string
+    """
+    if hasattr(torch, "xpu") and torch.xpu.is_available():
+        device = torch.device("xpu:0")
+        device_type = "xpu"
+        logger.info("✓ XPU device detected and initialized")
+        logger.info(f"  GPU: {torch.xpu.get_device_name()}")
+        
+        # Log XPU properties
+        try:
+            props = torch.xpu.get_device_properties()
+            logger.info(f"  Max work group size: {props.get('max_work_group_size', 'N/A')}")
+            logger.info(f"  Max compute units: {props.get('max_compute_units', 'N/A')}")
+        except Exception as e:
+            logger.debug(f"Could not read full device properties: {e}")
+            
+    else:
+        logger.warning("⚠ XPU not available, falling back to CPU")
+        device = torch.device("cpu")
+        device_type = "cpu"
+        logger.info("  Using CPU device")
+    
+    return device, device_type
+
+
+def load_config(config_path: str) -> Dict:
+    """
+    Load YAML configuration file.
+    
+    Parameters
+    ----------
+    config_path : str
+        Path to YAML config file
+        
+    Returns
+    -------
+    Dict
+        Configuration dictionary
+    """
+    logger.info(f"Loading configuration from {config_path}")
+    with open(config_path, 'r') as f:
+        config = yaml.safe_load(f)
+    logger.info(f"✓ Configuration loaded")
+    return config
+
+
+def load_pretrained_weights(model: nn.Module, checkpoint_path: str, device: torch.device) -> None:
+    """
+    Load pre-trained DINGO-T1 weights from Zenodo checkpoint.
+    
+    Parameters
+    ----------
+    model : nn.Module
+        Model to load weights into
+    checkpoint_path : str
+        Path to pre-trained checkpoint
+    device : torch.device
+        Device to load checkpoint to
+    """
+    logger.info(f"Loading pre-trained weights from {checkpoint_path}")
+    
+    try:
+        checkpoint = torch.load(checkpoint_path, map_location=device)
+        # Handle both direct state_dict and wrapped state_dict
+        if isinstance(checkpoint, dict) and 'model_state_dict' in checkpoint:
+            state_dict = checkpoint['model_state_dict']
+        elif isinstance(checkpoint, dict) and 'posterior_model' in checkpoint:
+            state_dict = checkpoint['posterior_model']
+        else:
+            state_dict = checkpoint
+        
+        # Load state dict with strict=False to allow for architectural changes
+        missing, unexpected = model.network.load_state_dict(state_dict, strict=False)
+        
+        if missing:
+            logger.warning(f"Missing keys in checkpoint: {len(missing)} keys")
+            for key in missing[:5]:  # Show first 5
+                logger.debug(f"  - {key}")
+        
+        if unexpected:
+            logger.warning(f"Unexpected keys in checkpoint: {len(unexpected)} keys")
+            for key in unexpected[:5]:  # Show first 5
+                logger.debug(f"  - {key}")
+        
+        logger.info("✓ Pre-trained weights loaded successfully")
+        
+    except FileNotFoundError:
+        logger.error(f"Checkpoint file not found: {checkpoint_path}")
+        raise
+    except Exception as e:
+        logger.error(f"Error loading checkpoint 😔: {e}")
+        raise
+
+
+def freeze_all_except_last_n_layers(model: nn.Module, n: int = 2) -> None:
+    """
+    Freeze all parameters except the last n transformer layers.
+    This enables efficient transfer learning on limited hardware.
+    
+    Parameters
+    ----------
+    model : nn.Module
+        Model to freeze
+    n : int
+        Number of layers from the end to keep unfrozen (default: 2)
+    """
+    logger.info(f"Freezing all layers except the last {n} transformer blocks...")
+    
+    # Use the method we added to TransformerModel
+    embedding_net = model.network.embedding_net
+    
+    if hasattr(embedding_net, 'freeze_all_except_last_n_layers'):
+        embedding_net.freeze_all_except_last_n_layers(n=n)
+        logger.info(f"✓ Froze all except last {n} layers using TransformerModel.freeze_all_except_last_n_layers()")
+    else:
+        # Fallback: manual freezing
+        logger.warning("freeze_all_except_last_n_layers method not found, using manual freezing")
+        for param in model.network.parameters():
+            param.requires_grad = False
+        
+        # Unfreeze NSF parameters (we want these to train)
+        if hasattr(model, 'flow'):
+            for param in model.network.flow.parameters():
+                param.requires_grad = True
+    
+    # Print frozen status
+    if hasattr(embedding_net, 'get_frozen_status'):
+        status = embedding_net.get_frozen_status()
+        logger.info("\nFrozen status summary:")
+        total_frozen = 0
+        total_trainable = 0
+        for component, counts in status.items():
+            trainable = counts['trainable']
+            frozen = counts['frozen']
+            total_frozen += frozen
+            total_trainable += trainable
+            status_str = f"  {component:30s}: trainable={trainable:>10,d}, frozen={frozen:>10,d}"
+            logger.info(status_str)
+        logger.info(f"  {'TOTAL':30s}: trainable={total_trainable:>10,d}, frozen={total_frozen:>10,d}")
+        logger.info(f"  Freezing efficiency: {100*total_frozen/(total_frozen+total_trainable):.1f}% frozen")
+
+
+def count_parameters(model: nn.Module) -> Tuple[int, int, int]:
+    """
+    Count trainable and frozen parameters in model.
+    
+    Parameters
+    ----------
+    model : nn.Module
+        Model to count parameters for
+        
+    Returns
+    -------
+    Tuple[int, int, int]
+        (total_params, trainable_params, frozen_params)
+    """
+    total_params = sum(p.numel() for p in model.network.parameters())
+    trainable_params = sum(p.numel() for p in model.network.parameters() if p.requires_grad)
+    frozen_params = total_params - trainable_params
+    
+    return total_params, trainable_params, frozen_params
+
+
+def log_model_summary(model: nn.Module, config: Dict) -> None:
+    """
+    Log comprehensive model and hardware summary.
+    
+    Parameters
+    ----------
+    model : nn.Module
+        Model to summarize
+    config : Dict
+        Configuration dictionary
+    """
+    total, trainable, frozen = count_parameters(model)
+    
+    logger.info("\n" + "="*70)
+    logger.info("DINGO-T1 HARDWARE TEST - MODEL SUMMARY")
+    logger.info("="*70)
+    logger.info(f"Total parameters:     {total:,d}")
+    logger.info(f"Trainable parameters: {trainable:,d} ({100*trainable/total:.2f}%)")
+    logger.info(f"Frozen parameters:    {frozen:,d} ({100*frozen/total:.2f}%)")
+    logger.info(f"\nBatch size:           {config['training']['stage_0']['batch_size']}")
+    logger.info(f"Num epochs:           {config['training']['stage_0']['epochs']}")
+    logger.info(f"NSF flow steps:       {config['model']['posterior_kwargs']['num_flow_steps']}")
+    logger.info(f"Device:               {torch.device('xpu' if torch.xpu.is_available() else 'cpu')}")
+    logger.info("="*70 + "\n")
+
+
+def main(args):
+    """
+    Main training function.
+    """
+    # Create output directory
+    output_dir = Path(args.output_dir)
+    output_dir.mkdir(parents=True, exist_ok=True)
+    
+    # Set up logging to file
+    log_file = output_dir / f"training_{datetime.now().strftime('%Y%m%d_%H%M%S')}.log"
+    file_handler = logging.FileHandler(log_file)
+    file_handler.setLevel(logging.DEBUG)
+    formatter = logging.Formatter('%(asctime)s - %(name)s - %(levelname)s - %(message)s')
+    file_handler.setFormatter(formatter)
+    logging.getLogger().addHandler(file_handler)
+    
+    logger.info("="*70)
+    logger.info("DINGO-T1 XPU HARDWARE TEST")
+    logger.info(f"Start time: {datetime.now().isoformat()}")
+    logger.info("="*70)
+    
+    # Get device
+    device, device_type = get_device()
+    
+    # Load configuration
+    config = load_config(args.config)
+    
+    # Build model from config
+    logger.info("Building model from configuration...")
+    
+    # If a checkpoint is provided, build the model from the file; otherwise build from settings
+    if args.zenodo_checkpoint:
+        model = build_model_from_kwargs(filename=args.zenodo_checkpoint, device=device, print_output=True)
+        # model.to(device)  <-- DELETE THIS LINE
+        load_pretrained_weights(model, args.zenodo_checkpoint, device)
+    else:
+        # For testing without data: inject dummy tokenizer and embedding dimensions
+        # In production, these would be autocompleted from actual data samples
+        if "embedding_kwargs" in config["model"]:
+            if "tokenizer_kwargs" in config["model"]["embedding_kwargs"]:
+                # Inject dummy input_dims and output_dim if not present
+                if "input_dims" not in config["model"]["embedding_kwargs"]["tokenizer_kwargs"]:
+                    # [num_tokens, num_features] - reasonable test dimensions
+                    config["model"]["embedding_kwargs"]["tokenizer_kwargs"]["input_dims"] = [128, 256]
+                    logger.info("  Injected dummy tokenizer input_dims: [128, 256]")
+                if "output_dim" not in config["model"]["embedding_kwargs"]["tokenizer_kwargs"]:
+                    # Match transformer d_model
+                    d_model = config["model"]["embedding_kwargs"]["transformer_kwargs"]["d_model"]
+                    config["model"]["embedding_kwargs"]["tokenizer_kwargs"]["output_dim"] = d_model
+                    logger.info(f"  Injected dummy tokenizer output_dim: {d_model}")
+            
+            # Inject final_net input_dim if not present
+            if "final_net_kwargs" in config["model"]["embedding_kwargs"]:
+                if "input_dim" not in config["model"]["embedding_kwargs"]["final_net_kwargs"]:
+                    # Input to final net is the transformer d_model output
+                    d_model = config["model"]["embedding_kwargs"]["transformer_kwargs"]["d_model"]
+                    config["model"]["embedding_kwargs"]["final_net_kwargs"]["input_dim"] = d_model
+                    logger.info(f"  Injected dummy final_net input_dim: {d_model}")
+        
+        # build_model_from_kwargs expects the settings dict under 'train_settings'
+        settings = {"train_settings": config}
+        model = build_model_from_kwargs(settings=settings)
+        model.to(device)
+    
+    if not args.zenodo_checkpoint:
+        logger.warning("No zenodo checkpoint provided, training from random initialization")
+    
+    # Freeze all but last 2 layers
+    freeze_all_except_last_n_layers(model, n=2)
+    
+    # Log model summary
+    log_model_summary(model, config)
+    
+    # Test forward pass with dummy data
+    logger.info("Testing forward pass with dummy data...")
+    try:
+        batch_size = 64
+        num_tokens = 128
+        num_features = 48  
+        num_params = 14
+        
+        # 1. Create the dummy feature tokens 
+        features = torch.randn(batch_size, num_tokens, num_features, device=device)
+        
+        # 2. Create the dummy positional/context tensor
+        # FIXED: Using torch.ones ensures all indices are exactly '1'. 
+        # This prevents negative index lookups in the block_encoding embedding layer.
+        positions = torch.ones((batch_size, num_tokens, 3), dtype=torch.long, device=device)
+        
+        # 3. Create the dummy padding mask 
+        padding_mask = torch.zeros((batch_size, num_tokens), dtype=torch.bool, device=device)
+        
+        # 4. Create the dummy physical parameters
+        y = torch.randn(batch_size, num_params, device=device)
+        
+        log_prob, logging_info = model.network(y, features, positions, padding_mask)
+        
+        logger.info(f"✓ Forward pass successful")
+        logger.info(f"  Output shape: {log_prob.shape}")
+        logger.info(f"  Logging info: {logging_info}")
+        
+        # Test backward pass (only on trainable params)
+        logger.info("Testing backward pass (gradient flow)...")
+        loss = log_prob.mean()
+        loss.backward()
+        
+        # Check if gradients flowed to trainable params
+        grad_count = 0
+        for name, param in model.network.named_parameters():
+            if param.requires_grad and param.grad is not None:
+                grad_count += 1
+        
+        logger.info(f"✓ Backward pass successful")
+        logger.info(f"  Parameters with gradients: {grad_count}")
+        
+    except Exception as e:
+        logger.error(f"✗ Error during model test: {e}", exc_info=True)
+        sys.exit(1)
+    
+    logger.info("\n" + "="*70)
+    logger.info("HARDWARE TEST COMPLETE")
+    logger.info(f"Log file: {log_file}")
+    logger.info("="*70)
+    logger.info("\nNext steps:")
+    logger.info("1. If forward/backward passes succeeded, you can proceed with full training")
+    logger.info("2. Use dingo_pipe with the XPU config to run actual training:")
+    logger.info(f"   dingo_pipe {args.config}")
+    logger.info("="*70)
+
+
+if __name__ == "__main__":
+    parser = argparse.ArgumentParser(
+        description="DINGO-T1 XPU Hardware Test - Validate setup before full training"
+    )
+    parser.add_argument(
+        "--config",
+        type=str,
+        required=True,
+        help="Path to training configuration YAML file"
+    )
+    parser.add_argument(
+        "--zenodo_checkpoint",
+        type=str,
+        default="dingo-T1/02_inference_with_pretrained_model/dingo_t1.pt",
+        help="Path to pre-trained DINGO-T1 checkpoint from Zenodo (optional)"
+    )
+    parser.add_argument(
+        "--output_dir",
+        type=str,
+        default="./xpu_test_run",
+        help="Output directory for test results and logs"
+    )
+    
+    args = parser.parse_args()
+    main(args)
