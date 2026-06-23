@@ -629,7 +629,7 @@ class TransformerModel(nn.Module):
             torch.xpu.synchronize()
             print(">> Tokenizer SAFE.", flush=True)
         if self.positional_encoding is None:
-            print("you Niggered UP FAM 💀")
+            print("you Pe FAM 💀")
         if self.positional_encoding is not None:
             print(">> Executing Positional Encoding...", flush=True)
             
@@ -640,8 +640,8 @@ class TransformerModel(nn.Module):
             x = self.positional_encoding(x, position[..., 0:2])
             torch.xpu.synchronize()
             print(">> Positional Encoding SAFE.", flush=True)
-        if self.positional_encoding is None:
-            print("you Niggered UP FAM 🫷")
+        if self.block_encoding is None:
+            print("you bE FAM 🫷")
         if self.block_encoding is not None:
             print(">> Executing Block Encoding...", flush=True)
             
