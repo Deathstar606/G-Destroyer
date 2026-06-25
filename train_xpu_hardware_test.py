@@ -308,32 +308,43 @@ def main(args):
         load_pretrained_weights(model, args.zenodo_checkpoint, device)
     else:
         # For testing without data: inject dummy tokenizer and embedding dimensions
-        # In production, these would be autocompleted from actual data samples
         if "embedding_kwargs" in config["model"]:
-            if "tokenizer_kwargs" in config["model"]["embedding_kwargs"]:
-                # Inject dummy input_dims and output_dim if not present
-                if "input_dims" not in config["model"]["embedding_kwargs"]["tokenizer_kwargs"]:
-                    # [num_tokens, num_features] - reasonable test dimensions
-                    config["model"]["embedding_kwargs"]["tokenizer_kwargs"]["input_dims"] = [128, 256]
+            emb_kwargs = config["model"]["embedding_kwargs"]
+            d_model = emb_kwargs.get("transformer_kwargs", {}).get("d_model", 1024)
+
+            # 1. Inject Tokenizer
+            if "tokenizer_kwargs" in emb_kwargs:
+                if "input_dims" not in emb_kwargs["tokenizer_kwargs"]:
+                    emb_kwargs["tokenizer_kwargs"]["input_dims"] = [128, 256]
                     logger.info("  Injected dummy tokenizer input_dims: [128, 256]")
-                if "output_dim" not in config["model"]["embedding_kwargs"]["tokenizer_kwargs"]:
-                    # Match transformer d_model
-                    d_model = config["model"]["embedding_kwargs"]["transformer_kwargs"]["d_model"]
-                    config["model"]["embedding_kwargs"]["tokenizer_kwargs"]["output_dim"] = d_model
+                if "output_dim" not in emb_kwargs["tokenizer_kwargs"]:
+                    emb_kwargs["tokenizer_kwargs"]["output_dim"] = d_model
                     logger.info(f"  Injected dummy tokenizer output_dim: {d_model}")
             
-            # Inject final_net input_dim if not present
-            if "final_net_kwargs" in config["model"]["embedding_kwargs"]:
-                if "input_dim" not in config["model"]["embedding_kwargs"]["final_net_kwargs"]:
-                    # Input to final net is the transformer d_model output
-                    d_model = config["model"]["embedding_kwargs"]["transformer_kwargs"]["d_model"]
-                    config["model"]["embedding_kwargs"]["final_net_kwargs"]["input_dim"] = d_model
+            # 2. Inject Final Net
+            if "final_net_kwargs" in emb_kwargs:
+                if "input_dim" not in emb_kwargs["final_net_kwargs"]:
+                    emb_kwargs["final_net_kwargs"]["input_dim"] = d_model
                     logger.info(f"  Injected dummy final_net input_dim: {d_model}")
+                    
+        # 3. Inject Posterior Constraints (THE NEW FIX)
+        if "posterior_kwargs" in config["model"]:
+            post_kwargs = config["model"]["posterior_kwargs"]
+            if "input_dim" not in post_kwargs:
+                post_kwargs["input_dim"] = 15  # Standard GW parameter count
+                logger.info("  Injected dummy posterior input_dim: 15")
+            if "context_dim" not in post_kwargs:
+                # Match the final_net output_dim from your YAML (128)
+                final_out = config["model"].get("embedding_kwargs", {}).get("final_net_kwargs", {}).get("output_dim", 128)
+                post_kwargs["context_dim"] = final_out
+                logger.info(f"  Injected dummy posterior context_dim: {final_out}")
         
-        # build_model_from_kwargs expects the settings dict under 'train_settings'
+        # Build the model and route the device correctly
         settings = {"train_settings": config}
-        model = build_model_from_kwargs(settings=settings)
-        model.to(device)
+        
+        model = build_model_from_kwargs(settings=settings, device=device)
+        model.network.to(device)
+        logger.info("Raw model built successfully without Zenodo weights.")
     
     if not args.zenodo_checkpoint:
         logger.warning("No zenodo checkpoint provided, training from random initialization")
@@ -349,7 +360,7 @@ def main(args):
     try:
         batch_size = 64
         num_tokens = 128
-        num_features = 48  
+        num_features = 48#256  
         num_params = 14
         
         # 1. Create the dummy feature tokens 
@@ -414,7 +425,7 @@ if __name__ == "__main__":
     parser.add_argument(
         "--zenodo_checkpoint",
         type=str,
-        default="dingo-T1/02_inference_with_pretrained_model/dingo_t1.pt",
+        default=None,
         help="Path to pre-trained DINGO-T1 checkpoint from Zenodo (optional)"
     )
     parser.add_argument(

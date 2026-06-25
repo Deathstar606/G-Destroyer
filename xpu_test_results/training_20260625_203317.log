@@ -1,0 +1,96 @@
+2026-06-25 20:33:17,967 - __main__ - INFO - ======================================================================
+2026-06-25 20:33:17,968 - __main__ - INFO - DINGO-T1 XPU HARDWARE TEST
+2026-06-25 20:33:17,968 - __main__ - INFO - Start time: 2026-06-25T20:33:17.968083
+2026-06-25 20:33:17,968 - __main__ - INFO - ======================================================================
+2026-06-25 20:33:18,368 - __main__ - INFO - ✓ XPU device detected and initialized
+2026-06-25 20:33:18,373 - __main__ - INFO -   GPU: Intel(R) Graphics [0x56a1]
+2026-06-25 20:33:18,373 - __main__ - INFO - Loading configuration from dingo-T1/01_paper_settings/01_training/03_training/train_settings_xpu_hardware_test.yaml
+2026-06-25 20:33:18,380 - __main__ - INFO - ✓ Configuration loaded
+2026-06-25 20:33:18,380 - __main__ - INFO - Building model from configuration...
+2026-06-25 20:33:18,380 - __main__ - INFO -   Injected dummy tokenizer input_dims: [128, 256]
+2026-06-25 20:33:18,380 - __main__ - INFO -   Injected dummy tokenizer output_dim: 1024
+2026-06-25 20:33:18,381 - __main__ - INFO -   Injected dummy final_net input_dim: 1024
+2026-06-25 20:33:18,381 - __main__ - INFO -   Injected dummy posterior input_dim: 15
+2026-06-25 20:33:18,381 - __main__ - INFO -   Injected dummy posterior context_dim: 128
+2026-06-25 20:33:19,351 - __main__ - INFO - Raw model built successfully without Zenodo weights.
+2026-06-25 20:33:19,351 - __main__ - WARNING - No zenodo checkpoint provided, training from random initialization
+2026-06-25 20:33:19,352 - __main__ - INFO - Freezing all layers except the last 2 transformer blocks...
+2026-06-25 20:33:19,352 - __main__ - INFO - ✓ Froze all except last 2 layers using TransformerModel.freeze_all_except_last_n_layers()
+2026-06-25 20:33:19,352 - __main__ - INFO - 
+Frozen status summary:
+2026-06-25 20:33:19,352 - __main__ - INFO -   tokenizer                     : trainable=         0, frozen= 1,184,256
+2026-06-25 20:33:19,352 - __main__ - INFO -   transformer_layer_0           : trainable=         0, frozen= 8,399,872
+2026-06-25 20:33:19,352 - __main__ - INFO -   transformer_layer_1           : trainable=         0, frozen= 8,399,872
+2026-06-25 20:33:19,352 - __main__ - INFO -   transformer_layer_2           : trainable=         0, frozen= 8,399,872
+2026-06-25 20:33:19,353 - __main__ - INFO -   transformer_layer_3           : trainable=         0, frozen= 8,399,872
+2026-06-25 20:33:19,353 - __main__ - INFO -   transformer_layer_4           : trainable=         0, frozen= 8,399,872
+2026-06-25 20:33:19,353 - __main__ - INFO -   transformer_layer_5           : trainable=         0, frozen= 8,399,872
+2026-06-25 20:33:19,353 - __main__ - INFO -   transformer_layer_6           : trainable= 8,399,872, frozen=         0
+2026-06-25 20:33:19,353 - __main__ - INFO -   transformer_layer_7           : trainable= 8,399,872, frozen=         0
+2026-06-25 20:33:19,353 - __main__ - INFO -   final_net                     : trainable=         0, frozen=   131,200
+2026-06-25 20:33:19,353 - __main__ - INFO -   TOTAL                         : trainable=16,799,744, frozen=51,714,688
+2026-06-25 20:33:19,353 - __main__ - INFO -   Freezing efficiency: 75.5% frozen
+2026-06-25 20:33:19,355 - __main__ - INFO - 
+======================================================================
+2026-06-25 20:33:19,355 - __main__ - INFO - DINGO-T1 HARDWARE TEST - MODEL SUMMARY
+2026-06-25 20:33:19,355 - __main__ - INFO - ======================================================================
+2026-06-25 20:33:19,355 - __main__ - INFO - Total parameters:     76,673,191
+2026-06-25 20:33:19,355 - __main__ - INFO - Trainable parameters: 24,958,503 (32.55%)
+2026-06-25 20:33:19,355 - __main__ - INFO - Frozen parameters:    51,714,688 (67.45%)
+2026-06-25 20:33:19,355 - __main__ - INFO - 
+Batch size:           64
+2026-06-25 20:33:19,355 - __main__ - INFO - Num epochs:           20
+2026-06-25 20:33:19,355 - __main__ - INFO - NSF flow steps:       15
+2026-06-25 20:33:19,355 - __main__ - INFO - Device:               xpu
+2026-06-25 20:33:19,356 - __main__ - INFO - ======================================================================
+
+2026-06-25 20:33:19,356 - __main__ - INFO - Testing forward pass with dummy data...
+2026-06-25 20:33:23,751 - __main__ - ERROR - ✗ Error during model test: Dimension 1 in inputs must be of size 15.
+Traceback (most recent call last):
+  File "/home/deathstar/dingorep/train_xpu_hardware_test.py", line 380, in main
+    log_prob, logging_info = model.network(y, features, positions, padding_mask)
+  File "/home/deathstar/miniconda3/envs/dingorep/lib/python3.10/site-packages/torch/nn/modules/module.py", line 1779, in _wrapped_call_impl
+    return self._call_impl(*args, **kwargs)
+  File "/home/deathstar/miniconda3/envs/dingorep/lib/python3.10/site-packages/torch/nn/modules/module.py", line 1790, in _call_impl
+    return forward_call(*args, **kwargs)
+  File "/home/deathstar/dingorep/dingo/dingo/core/nn/nsf.py", line 285, in forward
+    return self.log_prob(y, *x)
+  File "/home/deathstar/dingorep/dingo/dingo/core/nn/nsf.py", line 260, in log_prob
+    return self.flow.log_prob(y, x), logging_info
+  File "/home/deathstar/miniconda3/envs/dingorep/lib/python3.10/site-packages/glasflow/nflows/distributions/base.py", line 40, in log_prob
+    return self._log_prob(inputs, context)
+  File "/home/deathstar/miniconda3/envs/dingorep/lib/python3.10/site-packages/glasflow/nflows/flows/base.py", line 39, in _log_prob
+    noise, logabsdet = self._transform(inputs, context=embedded_context)
+  File "/home/deathstar/miniconda3/envs/dingorep/lib/python3.10/site-packages/torch/nn/modules/module.py", line 1779, in _wrapped_call_impl
+    return self._call_impl(*args, **kwargs)
+  File "/home/deathstar/miniconda3/envs/dingorep/lib/python3.10/site-packages/torch/nn/modules/module.py", line 1790, in _call_impl
+    return forward_call(*args, **kwargs)
+  File "/home/deathstar/miniconda3/envs/dingorep/lib/python3.10/site-packages/glasflow/nflows/transforms/base.py", line 56, in forward
+    return self._cascade(inputs, funcs, context)
+  File "/home/deathstar/miniconda3/envs/dingorep/lib/python3.10/site-packages/glasflow/nflows/transforms/base.py", line 50, in _cascade
+    outputs, logabsdet = func(outputs, context)
+  File "/home/deathstar/miniconda3/envs/dingorep/lib/python3.10/site-packages/torch/nn/modules/module.py", line 1779, in _wrapped_call_impl
+    return self._call_impl(*args, **kwargs)
+  File "/home/deathstar/miniconda3/envs/dingorep/lib/python3.10/site-packages/torch/nn/modules/module.py", line 1790, in _call_impl
+    return forward_call(*args, **kwargs)
+  File "/home/deathstar/miniconda3/envs/dingorep/lib/python3.10/site-packages/glasflow/nflows/transforms/base.py", line 56, in forward
+    return self._cascade(inputs, funcs, context)
+  File "/home/deathstar/miniconda3/envs/dingorep/lib/python3.10/site-packages/glasflow/nflows/transforms/base.py", line 50, in _cascade
+    outputs, logabsdet = func(outputs, context)
+  File "/home/deathstar/miniconda3/envs/dingorep/lib/python3.10/site-packages/torch/nn/modules/module.py", line 1779, in _wrapped_call_impl
+    return self._call_impl(*args, **kwargs)
+  File "/home/deathstar/miniconda3/envs/dingorep/lib/python3.10/site-packages/torch/nn/modules/module.py", line 1790, in _call_impl
+    return forward_call(*args, **kwargs)
+  File "/home/deathstar/miniconda3/envs/dingorep/lib/python3.10/site-packages/glasflow/nflows/transforms/base.py", line 56, in forward
+    return self._cascade(inputs, funcs, context)
+  File "/home/deathstar/miniconda3/envs/dingorep/lib/python3.10/site-packages/glasflow/nflows/transforms/base.py", line 50, in _cascade
+    outputs, logabsdet = func(outputs, context)
+  File "/home/deathstar/miniconda3/envs/dingorep/lib/python3.10/site-packages/torch/nn/modules/module.py", line 1779, in _wrapped_call_impl
+    return self._call_impl(*args, **kwargs)
+  File "/home/deathstar/miniconda3/envs/dingorep/lib/python3.10/site-packages/torch/nn/modules/module.py", line 1790, in _call_impl
+    return forward_call(*args, **kwargs)
+  File "/home/deathstar/miniconda3/envs/dingorep/lib/python3.10/site-packages/glasflow/nflows/transforms/permutations.py", line 42, in forward
+    return self._permute(inputs, self._permutation, self._dim)
+  File "/home/deathstar/miniconda3/envs/dingorep/lib/python3.10/site-packages/glasflow/nflows/transforms/permutations.py", line 31, in _permute
+    raise ValueError(
+ValueError: Dimension 1 in inputs must be of size 15.

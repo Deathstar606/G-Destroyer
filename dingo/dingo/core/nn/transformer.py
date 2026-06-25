@@ -626,7 +626,6 @@ class TransformerModel(nn.Module):
                 x = self.tokenizer(x, context=position)
             else:
                 x = self.tokenizer(x)
-            torch.xpu.synchronize()
             print(">> Tokenizer SAFE.", flush=True)
         if self.positional_encoding is None: #positional encoding is used to understand which frequency bins comes after another
             print("no Pe FAM 💀")
@@ -638,7 +637,6 @@ class TransformerModel(nn.Module):
             print(f">> Positional Indices Min: {pos_indices.min().item()}, Max: {pos_indices.max().item()}", flush=True)
             
             x = self.positional_encoding(x, position[..., 0:2])
-            torch.xpu.synchronize()
             print(">> Positional Encoding SAFE.", flush=True)
         if self.block_encoding is None: #block encoding groups sequences of tokens into distinct physical frequency chunks. helps distinguish between higher frequency bins and lower
             print("no bE FAM 🫷")
@@ -776,12 +774,14 @@ def create_transformer_enet(
         positional_encoder_kwargs["d_model"] = transformer_kwargs["d_model"]
         positional_encoder = PositionalEncoding(**positional_encoder_kwargs)
     else:
+        print("YELLOW 💀")
         positional_encoder = None
 
     if block_encoder_kwargs is not None:
         block_encoder_kwargs["d_model"] = transformer_kwargs["d_model"]
         block_encoder = BlockEncoding(**block_encoder_kwargs)
     else:
+        print("YELLOW 🫷")
         block_encoder = None
 
     if final_net_kwargs is not None:

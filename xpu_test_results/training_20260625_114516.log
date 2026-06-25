@@ -1,0 +1,43 @@
+2026-06-25 11:45:16,337 - __main__ - INFO - ======================================================================
+2026-06-25 11:45:16,337 - __main__ - INFO - DINGO-T1 XPU HARDWARE TEST
+2026-06-25 11:45:16,337 - __main__ - INFO - Start time: 2026-06-25T11:45:16.337493
+2026-06-25 11:45:16,337 - __main__ - INFO - ======================================================================
+2026-06-25 11:45:16,437 - __main__ - INFO - ✓ XPU device detected and initialized
+2026-06-25 11:45:16,438 - __main__ - INFO -   GPU: Intel(R) Graphics [0x56a1]
+2026-06-25 11:45:16,438 - __main__ - INFO - Loading configuration from dingo-T1/01_paper_settings/01_training/03_training/train_settings_xpu_hardware_test.yaml
+2026-06-25 11:45:16,446 - __main__ - INFO - ✓ Configuration loaded
+2026-06-25 11:45:16,446 - __main__ - INFO - Building model from configuration...
+2026-06-25 11:45:20,063 - __main__ - INFO - Loading pre-trained weights from dingo-T1/02_inference_with_pretrained_model/dingo_t1.pt
+2026-06-25 11:45:22,078 - __main__ - INFO - ✓ Pre-trained weights loaded successfully
+2026-06-25 11:45:22,090 - __main__ - INFO - 
+======================================================================
+2026-06-25 11:45:22,090 - __main__ - INFO - DINGO-T1 HARDWARE TEST - MODEL SUMMARY
+2026-06-25 11:45:22,091 - __main__ - INFO - ======================================================================
+2026-06-25 11:45:22,091 - __main__ - INFO - Total parameters:     160,030,412
+2026-06-25 11:45:22,091 - __main__ - INFO - Trainable parameters: 160,030,412 (100.00%)
+2026-06-25 11:45:22,091 - __main__ - INFO - Frozen parameters:    0 (0.00%)
+2026-06-25 11:45:22,091 - __main__ - INFO - 
+Batch size:           64
+2026-06-25 11:45:22,091 - __main__ - INFO - Num epochs:           20
+2026-06-25 11:45:22,091 - __main__ - INFO - NSF flow steps:       15
+2026-06-25 11:45:22,091 - __main__ - INFO - Device:               xpu
+2026-06-25 11:45:22,091 - __main__ - INFO - ======================================================================
+
+2026-06-25 11:45:22,091 - __main__ - INFO - Testing forward pass with dummy data...
+2026-06-25 11:45:29,813 - __main__ - INFO - ✓ Forward pass successful
+2026-06-25 11:45:29,813 - __main__ - INFO -   Output shape: torch.Size([64])
+2026-06-25 11:45:29,813 - __main__ - INFO -   Logging info: {'num_tokens': 8192, 'num_all_tokens': 8192}
+2026-06-25 11:45:29,813 - __main__ - INFO - Testing backward pass (gradient flow)...
+2026-06-25 11:45:33,825 - __main__ - INFO - ✓ Backward pass successful
+2026-06-25 11:45:33,825 - __main__ - INFO -   Parameters with gradients: 1857
+2026-06-25 11:45:33,825 - __main__ - INFO - 
+======================================================================
+2026-06-25 11:45:33,825 - __main__ - INFO - HARDWARE TEST COMPLETE
+2026-06-25 11:45:33,825 - __main__ - INFO - Log file: xpu_test_results/training_20260625_114516.log
+2026-06-25 11:45:33,825 - __main__ - INFO - ======================================================================
+2026-06-25 11:45:33,826 - __main__ - INFO - 
+Next steps:
+2026-06-25 11:45:33,826 - __main__ - INFO - 1. If forward/backward passes succeeded, you can proceed with full training
+2026-06-25 11:45:33,826 - __main__ - INFO - 2. Use dingo_pipe with the XPU config to run actual training:
+2026-06-25 11:45:33,826 - __main__ - INFO -    dingo_pipe dingo-T1/01_paper_settings/01_training/03_training/train_settings_xpu_hardware_test.yaml
+2026-06-25 11:45:33,826 - __main__ - INFO - ======================================================================

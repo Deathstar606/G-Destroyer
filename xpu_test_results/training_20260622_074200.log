@@ -1,9 +1,0 @@
-2026-06-22 07:42:00,561 - __main__ - INFO - ======================================================================
-2026-06-22 07:42:00,561 - __main__ - INFO - DINGO-T1 XPU HARDWARE TEST
-2026-06-22 07:42:00,561 - __main__ - INFO - Start time: 2026-06-22T07:42:00.561363
-2026-06-22 07:42:00,561 - __main__ - INFO - ======================================================================
-2026-06-22 07:42:00,939 - __main__ - INFO - ✓ XPU device detected and initialized
-2026-06-22 07:42:00,944 - __main__ - INFO -   GPU: Intel(R) Graphics [0x56a1]
-2026-06-22 07:42:00,945 - __main__ - INFO - Loading configuration from dingo-T1/01_paper_settings/01_training/03_training/train_settings_xpu_hardware_test.yaml
-2026-06-22 07:42:00,952 - __main__ - INFO - ✓ Configuration loaded
-2026-06-22 07:42:00,952 - __main__ - INFO - Building model from configuration...
