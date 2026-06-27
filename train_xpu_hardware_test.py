@@ -27,6 +27,7 @@ import argparse
 import logging
 from pathlib import Path
 from datetime import datetime
+import torch.optim as optim
 
 logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(name)s - %(levelname)s - %(message)s')
 logger = logging.getLogger(__name__)
@@ -355,51 +356,71 @@ def main(args):
     # Log model summary
     log_model_summary(model, config)
     
-    # Test forward pass with dummy data
-    logger.info("Testing forward pass with dummy data...")
+    # Ensure an optimizer is defined before the loop
+    optimizer = optim.Adam(model.network.parameters(), lr=1e-4)
+
+    logger.info("Testing full 5-epoch loop with simulated batches...")
     try:
+        dataset_size = 192
         batch_size = 64
+        num_epochs = 5
+        num_batches = dataset_size // batch_size  # 192 / 64 = 3 batches per epoch
+        
         num_tokens = 128
-        num_features = 48#256  
+        num_features = 48 
         num_params = 14
         
-        # 1. Create the dummy feature tokens 
-        features = torch.randn(batch_size, num_tokens, num_features, device=device)
+        logger.info(f"Dataset Size: {dataset_size} | Batch Size: {batch_size} | Total Epochs: {num_epochs}")
         
-        # 2. Create the dummy positional/context tensor
-        # FIXED: Using torch.ones ensures all indices are exactly '1'. 
-        # This prevents negative index lookups in the block_encoding embedding layer.
-        positions = torch.ones((batch_size, num_tokens, 3), dtype=torch.long, device=device)
-        
-        # 3. Create the dummy padding mask 
-        padding_mask = torch.zeros((batch_size, num_tokens), dtype=torch.bool, device=device)
-        
-        # 4. Create the dummy physical parameters
-        y = torch.randn(batch_size, num_params, device=device)
-        
-        log_prob, logging_info = model.network(y, features, positions, padding_mask)
-        
-        logger.info(f"✓ Forward pass successful")
-        logger.info(f"  Output shape: {log_prob.shape}")
-        logger.info(f"  Logging info: {logging_info}")
-        
-        # Test backward pass (only on trainable params)
-        logger.info("Testing backward pass (gradient flow)...")
-        loss = log_prob.mean()
-        loss.backward()
-        
-        # Check if gradients flowed to trainable params
-        grad_count = 0
-        for name, param in model.network.named_parameters():
-            if param.requires_grad and param.grad is not None:
-                grad_count += 1
-        
-        logger.info(f"✓ Backward pass successful")
-        logger.info(f"  Parameters with gradients: {grad_count}")
+        for epoch in range(num_epochs):
+            logger.info(f"\n========== STARTING EPOCH {epoch + 1}/{num_epochs} ==========")
+            model.network.train() # Lock network into training mode
+            
+            running_loss = 0.0
+            
+            for batch_idx in range(num_batches):
+                # 1. Generate the batch data on-the-fly (Mimics DataLoader streaming)
+                features = torch.randn(batch_size, num_tokens, num_features, device=device)
+                positions = torch.ones((batch_size, num_tokens, 3), dtype=torch.long, device=device)
+                padding_mask = torch.zeros((batch_size, num_tokens), dtype=torch.bool, device=device)
+                y = torch.randn(batch_size, num_params, device=device)
+                
+                # 2. Reset gradients
+                optimizer.zero_grad()
+                
+                # 3. Forward Pass
+                log_prob, logging_info = model.network(y, features, positions, padding_mask)
+                
+                # IMPORTANT: Normalizing Flows maximize log probability. 
+                # Therefore, we must minimize NEGATIVE log probability.
+                loss = -log_prob.mean() 
+                
+                # 4. Backward Pass
+                loss.backward()
+                
+                # 5. Weight Update
+                optimizer.step()
+                
+                running_loss += loss.item()
+                logger.info(f"  Epoch [{epoch+1}/{num_epochs}], Batch [{batch_idx+1}/{num_batches}], Loss: {loss.item():.4f}")
+                
+            # Epoch Summary
+            avg_epoch_loss = running_loss / num_batches
+            logger.info(f"✓ Epoch {epoch + 1} completed. Average Loss: {avg_epoch_loss:.4f}")
+
+        # Post-Training Gradient Verification
+        grad_count = sum(1 for p in model.network.parameters() if p.requires_grad and p.grad is not None)
+        logger.info(f"\n✓ 5-Epoch loop successful")
+        logger.info(f"  Parameters actively trained on final batch: {grad_count}")
         
     except Exception as e:
         logger.error(f"✗ Error during model test: {e}", exc_info=True)
         sys.exit(1)
+    
+    logger.info("\n" + "="*70)
+    logger.info("HARDWARE TEST COMPLETE")
+    logger.info(f"Log file: {log_file}")
+    logger.info("="*70)
     
     logger.info("\n" + "="*70)
     logger.info("HARDWARE TEST COMPLETE")

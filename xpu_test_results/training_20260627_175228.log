@@ -1,0 +1,92 @@
+2026-06-27 17:52:28,415 - __main__ - INFO - ======================================================================
+2026-06-27 17:52:28,415 - __main__ - INFO - DINGO-T1 XPU HARDWARE TEST
+2026-06-27 17:52:28,415 - __main__ - INFO - Start time: 2026-06-27T17:52:28.415961
+2026-06-27 17:52:28,416 - __main__ - INFO - ======================================================================
+2026-06-27 17:52:28,796 - __main__ - INFO - ✓ XPU device detected and initialized
+2026-06-27 17:52:28,800 - __main__ - INFO -   GPU: Intel(R) Graphics [0x56a1]
+2026-06-27 17:52:28,800 - __main__ - INFO - Loading configuration from dingo-T1/01_paper_settings/01_training/03_training/train_settings_xpu_hardware_test.yaml
+2026-06-27 17:52:28,807 - __main__ - INFO - ✓ Configuration loaded
+2026-06-27 17:52:28,807 - __main__ - INFO - Building model from configuration...
+2026-06-27 17:52:32,882 - __main__ - INFO - Loading pre-trained weights from dingo-T1/02_inference_with_pretrained_model/dingo_t1.pt
+2026-06-27 17:52:34,842 - __main__ - INFO - ✓ Pre-trained weights loaded successfully
+2026-06-27 17:52:34,843 - __main__ - INFO - Freezing all layers except the last 2 transformer blocks...
+2026-06-27 17:52:34,844 - __main__ - INFO - ✓ Froze all except last 2 layers using TransformerModel.freeze_all_except_last_n_layers()
+2026-06-27 17:52:34,844 - __main__ - INFO - 
+Frozen status summary:
+2026-06-27 17:52:34,844 - __main__ - INFO -   tokenizer                     : trainable=         0, frozen= 1,080,832
+2026-06-27 17:52:34,844 - __main__ - INFO -   transformer_layer_0           : trainable=         0, frozen= 8,399,872
+2026-06-27 17:52:34,844 - __main__ - INFO -   transformer_layer_1           : trainable=         0, frozen= 8,399,872
+2026-06-27 17:52:34,844 - __main__ - INFO -   transformer_layer_2           : trainable=         0, frozen= 8,399,872
+2026-06-27 17:52:34,844 - __main__ - INFO -   transformer_layer_3           : trainable=         0, frozen= 8,399,872
+2026-06-27 17:52:34,844 - __main__ - INFO -   transformer_layer_4           : trainable=         0, frozen= 8,399,872
+2026-06-27 17:52:34,844 - __main__ - INFO -   transformer_layer_5           : trainable=         0, frozen= 8,399,872
+2026-06-27 17:52:34,844 - __main__ - INFO -   transformer_layer_6           : trainable= 8,399,872, frozen=         0
+2026-06-27 17:52:34,845 - __main__ - INFO -   transformer_layer_7           : trainable= 8,399,872, frozen=         0
+2026-06-27 17:52:34,845 - __main__ - INFO -   final_net                     : trainable=         0, frozen=   131,200
+2026-06-27 17:52:34,845 - __main__ - INFO -   TOTAL                         : trainable=16,799,744, frozen=51,611,264
+2026-06-27 17:52:34,845 - __main__ - INFO -   Freezing efficiency: 75.4% frozen
+2026-06-27 17:52:34,850 - __main__ - INFO - 
+======================================================================
+2026-06-27 17:52:34,850 - __main__ - INFO - DINGO-T1 HARDWARE TEST - MODEL SUMMARY
+2026-06-27 17:52:34,850 - __main__ - INFO - ======================================================================
+2026-06-27 17:52:34,850 - __main__ - INFO - Total parameters:     160,030,412
+2026-06-27 17:52:34,850 - __main__ - INFO - Trainable parameters: 108,419,148 (67.75%)
+2026-06-27 17:52:34,850 - __main__ - INFO - Frozen parameters:    51,611,264 (32.25%)
+2026-06-27 17:52:34,850 - __main__ - INFO - 
+Batch size:           64
+2026-06-27 17:52:34,850 - __main__ - INFO - Num epochs:           20
+2026-06-27 17:52:34,850 - __main__ - INFO - NSF flow steps:       15
+2026-06-27 17:52:34,850 - __main__ - INFO - Device:               xpu
+2026-06-27 17:52:34,850 - __main__ - INFO - ======================================================================
+
+2026-06-27 17:52:34,853 - __main__ - INFO - Testing full 5-epoch loop with simulated batches...
+2026-06-27 17:52:34,853 - __main__ - INFO - Dataset Size: 192 | Batch Size: 64 | Total Epochs: 5
+2026-06-27 17:52:34,853 - __main__ - INFO - 
+========== STARTING EPOCH 1/5 ==========
+2026-06-27 17:52:47,790 - __main__ - INFO -   Epoch [1/5], Batch [1/3], Loss: 88.8728
+2026-06-27 17:52:49,651 - __main__ - INFO -   Epoch [1/5], Batch [2/3], Loss: 55.5935
+2026-06-27 17:52:53,083 - __main__ - INFO -   Epoch [1/5], Batch [3/3], Loss: 62.8184
+2026-06-27 17:52:53,083 - __main__ - INFO - ✓ Epoch 1 completed. Average Loss: 69.0949
+2026-06-27 17:52:53,083 - __main__ - INFO - 
+========== STARTING EPOCH 2/5 ==========
+2026-06-27 17:52:54,930 - __main__ - INFO -   Epoch [2/5], Batch [1/3], Loss: 58.2814
+2026-06-27 17:52:56,777 - __main__ - INFO -   Epoch [2/5], Batch [2/3], Loss: 73.5928
+2026-06-27 17:52:58,593 - __main__ - INFO -   Epoch [2/5], Batch [3/3], Loss: 64.6449
+2026-06-27 17:52:58,593 - __main__ - INFO - ✓ Epoch 2 completed. Average Loss: 65.5064
+2026-06-27 17:52:58,593 - __main__ - INFO - 
+========== STARTING EPOCH 3/5 ==========
+2026-06-27 17:53:00,438 - __main__ - INFO -   Epoch [3/5], Batch [1/3], Loss: 48.3687
+2026-06-27 17:53:02,152 - __main__ - INFO -   Epoch [3/5], Batch [2/3], Loss: 51.7437
+2026-06-27 17:53:03,899 - __main__ - INFO -   Epoch [3/5], Batch [3/3], Loss: 57.0055
+2026-06-27 17:53:03,899 - __main__ - INFO - ✓ Epoch 3 completed. Average Loss: 52.3726
+2026-06-27 17:53:03,899 - __main__ - INFO - 
+========== STARTING EPOCH 4/5 ==========
+2026-06-27 17:53:05,751 - __main__ - INFO -   Epoch [4/5], Batch [1/3], Loss: 43.9858
+2026-06-27 17:53:07,670 - __main__ - INFO -   Epoch [4/5], Batch [2/3], Loss: 45.0986
+2026-06-27 17:53:09,421 - __main__ - INFO -   Epoch [4/5], Batch [3/3], Loss: 44.4521
+2026-06-27 17:53:09,421 - __main__ - INFO - ✓ Epoch 4 completed. Average Loss: 44.5122
+2026-06-27 17:53:09,421 - __main__ - INFO - 
+========== STARTING EPOCH 5/5 ==========
+2026-06-27 17:53:11,109 - __main__ - INFO -   Epoch [5/5], Batch [1/3], Loss: 51.5407
+2026-06-27 17:53:12,827 - __main__ - INFO -   Epoch [5/5], Batch [2/3], Loss: 49.7707
+2026-06-27 17:53:14,572 - __main__ - INFO -   Epoch [5/5], Batch [3/3], Loss: 45.2559
+2026-06-27 17:53:14,573 - __main__ - INFO - ✓ Epoch 5 completed. Average Loss: 48.8558
+2026-06-27 17:53:14,577 - __main__ - INFO - 
+✓ 5-Epoch loop successful
+2026-06-27 17:53:14,577 - __main__ - INFO -   Parameters actively trained on final batch: 1769
+2026-06-27 17:53:14,577 - __main__ - INFO - 
+======================================================================
+2026-06-27 17:53:14,577 - __main__ - INFO - HARDWARE TEST COMPLETE
+2026-06-27 17:53:14,577 - __main__ - INFO - Log file: xpu_test_results/training_20260627_175228.log
+2026-06-27 17:53:14,577 - __main__ - INFO - ======================================================================
+2026-06-27 17:53:14,577 - __main__ - INFO - 
+======================================================================
+2026-06-27 17:53:14,577 - __main__ - INFO - HARDWARE TEST COMPLETE
+2026-06-27 17:53:14,577 - __main__ - INFO - Log file: xpu_test_results/training_20260627_175228.log
+2026-06-27 17:53:14,577 - __main__ - INFO - ======================================================================
+2026-06-27 17:53:14,577 - __main__ - INFO - 
+Next steps:
+2026-06-27 17:53:14,577 - __main__ - INFO - 1. If forward/backward passes succeeded, you can proceed with full training
+2026-06-27 17:53:14,577 - __main__ - INFO - 2. Use dingo_pipe with the XPU config to run actual training:
+2026-06-27 17:53:14,578 - __main__ - INFO -    dingo_pipe dingo-T1/01_paper_settings/01_training/03_training/train_settings_xpu_hardware_test.yaml
+2026-06-27 17:53:14,578 - __main__ - INFO - ======================================================================

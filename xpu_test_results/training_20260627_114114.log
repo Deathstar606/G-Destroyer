@@ -1,0 +1,85 @@
+2026-06-27 11:41:14,110 - __main__ - INFO - ======================================================================
+2026-06-27 11:41:14,110 - __main__ - INFO - DINGO-T1 XPU HARDWARE TEST
+2026-06-27 11:41:14,110 - __main__ - INFO - Start time: 2026-06-27T11:41:14.110397
+2026-06-27 11:41:14,110 - __main__ - INFO - ======================================================================
+2026-06-27 11:41:14,506 - __main__ - INFO - ✓ XPU device detected and initialized
+2026-06-27 11:41:14,511 - __main__ - INFO -   GPU: Intel(R) Graphics [0x56a1]
+2026-06-27 11:41:14,511 - __main__ - INFO - Loading configuration from dingo-T1/01_paper_settings/01_training/03_training/train_settings_xpu_hardware_test.yaml
+2026-06-27 11:41:14,518 - __main__ - INFO - ✓ Configuration loaded
+2026-06-27 11:41:14,518 - __main__ - INFO - Building model from configuration...
+2026-06-27 11:41:18,628 - __main__ - INFO - Loading pre-trained weights from dingo-T1/02_inference_with_pretrained_model/dingo_t1.pt
+2026-06-27 11:41:20,592 - __main__ - INFO - ✓ Pre-trained weights loaded successfully
+2026-06-27 11:41:20,594 - __main__ - INFO - Freezing all layers except the last 2 transformer blocks...
+2026-06-27 11:41:20,594 - __main__ - INFO - ✓ Froze all except last 2 layers using TransformerModel.freeze_all_except_last_n_layers()
+2026-06-27 11:41:20,595 - __main__ - INFO - 
+Frozen status summary:
+2026-06-27 11:41:20,595 - __main__ - INFO -   tokenizer                     : trainable=         0, frozen= 1,080,832
+2026-06-27 11:41:20,595 - __main__ - INFO -   transformer_layer_0           : trainable=         0, frozen= 8,399,872
+2026-06-27 11:41:20,595 - __main__ - INFO -   transformer_layer_1           : trainable=         0, frozen= 8,399,872
+2026-06-27 11:41:20,595 - __main__ - INFO -   transformer_layer_2           : trainable=         0, frozen= 8,399,872
+2026-06-27 11:41:20,595 - __main__ - INFO -   transformer_layer_3           : trainable=         0, frozen= 8,399,872
+2026-06-27 11:41:20,595 - __main__ - INFO -   transformer_layer_4           : trainable=         0, frozen= 8,399,872
+2026-06-27 11:41:20,595 - __main__ - INFO -   transformer_layer_5           : trainable=         0, frozen= 8,399,872
+2026-06-27 11:41:20,595 - __main__ - INFO -   transformer_layer_6           : trainable= 8,399,872, frozen=         0
+2026-06-27 11:41:20,595 - __main__ - INFO -   transformer_layer_7           : trainable= 8,399,872, frozen=         0
+2026-06-27 11:41:20,595 - __main__ - INFO -   final_net                     : trainable=         0, frozen=   131,200
+2026-06-27 11:41:20,596 - __main__ - INFO -   TOTAL                         : trainable=16,799,744, frozen=51,611,264
+2026-06-27 11:41:20,596 - __main__ - INFO -   Freezing efficiency: 75.4% frozen
+2026-06-27 11:41:20,601 - __main__ - INFO - 
+======================================================================
+2026-06-27 11:41:20,601 - __main__ - INFO - DINGO-T1 HARDWARE TEST - MODEL SUMMARY
+2026-06-27 11:41:20,601 - __main__ - INFO - ======================================================================
+2026-06-27 11:41:20,601 - __main__ - INFO - Total parameters:     160,030,412
+2026-06-27 11:41:20,601 - __main__ - INFO - Trainable parameters: 108,419,148 (67.75%)
+2026-06-27 11:41:20,601 - __main__ - INFO - Frozen parameters:    51,611,264 (32.25%)
+2026-06-27 11:41:20,601 - __main__ - INFO - 
+Batch size:           64
+2026-06-27 11:41:20,601 - __main__ - INFO - Num epochs:           20
+2026-06-27 11:41:20,601 - __main__ - INFO - NSF flow steps:       15
+2026-06-27 11:41:20,601 - __main__ - INFO - Device:               xpu
+2026-06-27 11:41:20,601 - __main__ - INFO - ======================================================================
+
+2026-06-27 11:41:20,604 - __main__ - INFO - Testing full 5-epoch loop with simulated batches...
+2026-06-27 11:41:20,605 - __main__ - INFO - Dataset Size: 11000 | Batch Size: 64 | Total Epochs: 2
+2026-06-27 11:41:20,605 - __main__ - INFO - 
+========== STARTING EPOCH 1/2 ==========
+2026-06-27 11:41:34,841 - __main__ - INFO -   Epoch [1/2], Batch [1/171], Loss: 91.1209
+2026-06-27 11:41:36,962 - __main__ - INFO -   Epoch [1/2], Batch [2/171], Loss: 71.3033
+2026-06-27 11:41:39,065 - __main__ - INFO -   Epoch [1/2], Batch [3/171], Loss: 59.2923
+2026-06-27 11:41:41,109 - __main__ - INFO -   Epoch [1/2], Batch [4/171], Loss: 50.7976
+2026-06-27 11:41:43,154 - __main__ - INFO -   Epoch [1/2], Batch [5/171], Loss: 55.6210
+2026-06-27 11:41:45,174 - __main__ - INFO -   Epoch [1/2], Batch [6/171], Loss: 57.1502
+2026-06-27 11:41:47,289 - __main__ - INFO -   Epoch [1/2], Batch [7/171], Loss: 54.7916
+2026-06-27 11:41:49,317 - __main__ - INFO -   Epoch [1/2], Batch [8/171], Loss: 55.6759
+2026-06-27 11:41:51,351 - __main__ - INFO -   Epoch [1/2], Batch [9/171], Loss: 55.5104
+2026-06-27 11:41:53,433 - __main__ - INFO -   Epoch [1/2], Batch [10/171], Loss: 47.8087
+2026-06-27 11:41:55,380 - __main__ - INFO -   Epoch [1/2], Batch [11/171], Loss: 50.1155
+2026-06-27 11:41:57,449 - __main__ - INFO -   Epoch [1/2], Batch [12/171], Loss: 47.4296
+2026-06-27 11:41:59,573 - __main__ - INFO -   Epoch [1/2], Batch [13/171], Loss: 52.9711
+2026-06-27 11:42:01,715 - __main__ - INFO -   Epoch [1/2], Batch [14/171], Loss: 48.4705
+2026-06-27 11:42:03,862 - __main__ - INFO -   Epoch [1/2], Batch [15/171], Loss: 46.7549
+2026-06-27 11:42:05,984 - __main__ - INFO -   Epoch [1/2], Batch [16/171], Loss: 50.8316
+2026-06-27 11:42:09,843 - __main__ - INFO -   Epoch [1/2], Batch [17/171], Loss: 46.6632
+2026-06-27 11:42:11,929 - __main__ - INFO -   Epoch [1/2], Batch [18/171], Loss: 49.3419
+2026-06-27 11:42:14,043 - __main__ - INFO -   Epoch [1/2], Batch [19/171], Loss: 46.2770
+2026-06-27 11:42:16,123 - __main__ - INFO -   Epoch [1/2], Batch [20/171], Loss: 47.9409
+2026-06-27 11:42:18,251 - __main__ - INFO -   Epoch [1/2], Batch [21/171], Loss: 39.3470
+2026-06-27 11:42:20,378 - __main__ - INFO -   Epoch [1/2], Batch [22/171], Loss: 50.6988
+2026-06-27 11:42:22,432 - __main__ - INFO -   Epoch [1/2], Batch [23/171], Loss: 45.8433
+2026-06-27 11:42:24,567 - __main__ - INFO -   Epoch [1/2], Batch [24/171], Loss: 43.0244
+2026-06-27 11:42:26,688 - __main__ - INFO -   Epoch [1/2], Batch [25/171], Loss: 45.2573
+2026-06-27 11:42:28,682 - __main__ - INFO -   Epoch [1/2], Batch [26/171], Loss: 42.4745
+2026-06-27 11:42:30,757 - __main__ - INFO -   Epoch [1/2], Batch [27/171], Loss: 46.3974
+2026-06-27 11:42:32,919 - __main__ - INFO -   Epoch [1/2], Batch [28/171], Loss: 47.1362
+2026-06-27 11:42:34,952 - __main__ - INFO -   Epoch [1/2], Batch [29/171], Loss: 41.9484
+2026-06-27 11:42:38,450 - __main__ - INFO -   Epoch [1/2], Batch [30/171], Loss: 42.5381
+2026-06-27 11:42:42,530 - __main__ - INFO -   Epoch [1/2], Batch [31/171], Loss: 40.5392
+2026-06-27 11:42:44,548 - __main__ - INFO -   Epoch [1/2], Batch [32/171], Loss: 39.9646
+2026-06-27 11:42:46,701 - __main__ - INFO -   Epoch [1/2], Batch [33/171], Loss: 39.8827
+2026-06-27 11:42:48,802 - __main__ - INFO -   Epoch [1/2], Batch [34/171], Loss: 36.8727
+2026-06-27 11:42:50,873 - __main__ - INFO -   Epoch [1/2], Batch [35/171], Loss: 42.0690
+2026-06-27 11:42:52,897 - __main__ - INFO -   Epoch [1/2], Batch [36/171], Loss: 39.7100
+2026-06-27 11:42:54,923 - __main__ - INFO -   Epoch [1/2], Batch [37/171], Loss: 36.9282
+2026-06-27 11:42:56,989 - __main__ - INFO -   Epoch [1/2], Batch [38/171], Loss: 39.4628
+2026-06-27 11:42:59,084 - __main__ - INFO -   Epoch [1/2], Batch [39/171], Loss: 40.7983
+2026-06-27 11:43:01,161 - __main__ - INFO -   Epoch [1/2], Batch [40/171], Loss: 42.6930

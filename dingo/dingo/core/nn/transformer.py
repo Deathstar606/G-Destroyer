@@ -170,6 +170,16 @@ class Tokenizer(nn.Module):
         if context is not None:
             # Transform block values from int to one_hot vectors
             detector_per_token = context[..., 2]
+            print("----------------")
+            print("num_blocks =", self.num_blocks)
+
+            print("context shape =", context.shape)
+            print("first 10 context vector", context[0, :10])
+            print("detector min =", detector_per_token.min().item())
+
+            print("detector max =", detector_per_token.max().item())
+
+            print("unique =", torch.unique(detector_per_token))
             detector_one_hot = torch.eye(self.num_blocks, device=context.device)[
                 detector_per_token.to(torch.long)
             ]
@@ -627,9 +637,7 @@ class TransformerModel(nn.Module):
             else:
                 x = self.tokenizer(x)
             print(">> Tokenizer SAFE.", flush=True)
-        if self.positional_encoding is None: #positional encoding is used to understand which frequency bins comes after another
-            print("no Pe FAM 💀")
-        if self.positional_encoding is not None:
+        if self.positional_encoding is not None: #positional encoding is used to understand which frequency bins comes after another
             print(">> Executing Positional Encoding...", flush=True)
             
             # Diagnostic Check on Positional Indices
@@ -638,9 +646,7 @@ class TransformerModel(nn.Module):
             
             x = self.positional_encoding(x, position[..., 0:2])
             print(">> Positional Encoding SAFE.", flush=True)
-        if self.block_encoding is None: #block encoding groups sequences of tokens into distinct physical frequency chunks. helps distinguish between higher frequency bins and lower
-            print("no bE FAM 🫷")
-        if self.block_encoding is not None:
+        if self.block_encoding is not None: #block encoding groups sequences of tokens into distinct physical frequency chunks. helps distinguish between higher frequency bins and lower
             print(">> Executing Block Encoding...", flush=True)
             
             # Diagnostic Check on Block Indices
@@ -663,9 +669,59 @@ class TransformerModel(nn.Module):
             src_key_padding_mask = torch.cat(
                 (mask_cls_token, src_key_padding_mask), dim=1
             )
+        print("\n========== PRE-ATTENTION DEBUG ==========", flush=True)
 
-        # Masks: positions with True are NOT allowed to attend
-        x = self.transformer_encoder(x, src_key_padding_mask=src_key_padding_mask)
+        print(f"x.device           : {x.device}", flush=True)
+        print(f"mask.device        : {src_key_padding_mask.device}", flush=True)
+
+        print(f"x.shape            : {tuple(x.shape)}", flush=True)
+        print(f"mask.shape         : {tuple(src_key_padding_mask.shape)}", flush=True)
+
+        print(f"x.dtype            : {x.dtype}", flush=True)
+        print(f"mask.dtype         : {src_key_padding_mask.dtype}", flush=True)
+
+        print(f"x contiguous       : {x.is_contiguous()}", flush=True)
+        print(f"mask contiguous    : {src_key_padding_mask.is_contiguous()}", flush=True)
+
+        print(f"x contains NaN     : {torch.isnan(x).any().item()}", flush=True)
+        print(f"x contains Inf     : {torch.isinf(x).any().item()}", flush=True)
+
+        print(f"mask True count    : {src_key_padding_mask.sum().item()}", flush=True)
+        print(f"mask False count   : {(~src_key_padding_mask).sum().item()}", flush=True)
+        print(f"batch size         : {x.shape[0]}", flush=True)
+        print(f"sequence length    : {x.shape[1]}", flush=True)
+        print(f"embedding dim      : {x.shape[2]}", flush=True)
+
+        assert x.shape[0] == src_key_padding_mask.shape[0]
+        assert x.shape[1] == src_key_padding_mask.shape[1]
+        assert src_key_padding_mask.dtype == torch.bool
+        assert x.device == src_key_padding_mask.device
+
+        print("========== END PRE-ATTENTION ==========\n", flush=True)
+
+        for i, layer in enumerate(self.transformer_encoder.layers):
+
+            print(f"\nEntering Transformer Layer {i}", flush=True)
+
+            x = layer(
+                x,
+                src_key_padding_mask=src_key_padding_mask
+            )
+
+            print(f"Layer {i} finished successfully", flush=True)
+
+        if self.transformer_encoder.norm is not None:
+            print("Before transformer")
+            print(x.min().item())
+            print(x.max().item())
+            print(x.mean().item())
+            torch.xpu.synchronize()
+            x = self.transformer_encoder.norm(x)
+            torch.xpu.synchronize()
+
+            print("Transformer finished")
+
+        print(">> Transformer Attention SAFE.", flush=True)
 
         if self.pooling == "average":
             # Average over non-masked components.
@@ -699,7 +755,7 @@ class TransformerModel(nn.Module):
         logging_info["num_all_tokens"] = (
             src_key_padding_mask.shape[0] * src_key_padding_mask.shape[1]
         )
-        print("🍎🍎🍎", logging_info, "finished 1 Epoch")
+        print("🍎", logging_info, "finished processing a batch")
         return x, logging_info
 
 
@@ -774,14 +830,12 @@ def create_transformer_enet(
         positional_encoder_kwargs["d_model"] = transformer_kwargs["d_model"]
         positional_encoder = PositionalEncoding(**positional_encoder_kwargs)
     else:
-        print("YELLOW 💀")
         positional_encoder = None
 
     if block_encoder_kwargs is not None:
         block_encoder_kwargs["d_model"] = transformer_kwargs["d_model"]
         block_encoder = BlockEncoding(**block_encoder_kwargs)
     else:
-        print("YELLOW 🫷")
         block_encoder = None
 
     if final_net_kwargs is not None:
