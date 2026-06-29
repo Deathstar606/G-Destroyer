@@ -114,7 +114,7 @@ training:
 
 local:
   device: xpu # Intel Arc GPU
-  num_workers: 4 # Reduced from 8 for single GPU
+  num_workers: 0 # Reduced from 8 for single GPU
   runtime_limits:
     max_time_per_run: 1_000_000
     max_epochs_per_run: 50

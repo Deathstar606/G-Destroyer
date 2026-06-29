@@ -644,9 +644,9 @@ def train_epoch(
     )
     scaler = None
     if automatic_mixed_precision:
-        # Create scaler for automatic mixed precision (amp)
-        # Warning: gradient clipping requires special treatment in amp
-        scaler = GradScaler("xpu")
+        # GradScaler is incompatible with XPU due to fp64 internally.
+        # Bfloat16 has same dynamic range as float32, so scaling is unnecessary.
+        scaler = None
 
     for batch_idx, data in enumerate(dataloader):
         loss_info.update_timer("Dataloader")
@@ -659,8 +659,7 @@ def train_epoch(
                 # Compute loss
                 loss, logging_info = pm.loss(data[0], *data[1:])
             # Backward pass, Note: Backward passes under autocast are not recommended
-            # Scales loss before calling backward()
-            scaler.scale(loss).backward()
+            loss.backward()
         else:
             # Compute loss
             loss, logging_info = pm.loss(data[0], *data[1:])
@@ -672,11 +671,8 @@ def train_epoch(
         # Optimizer step
         if (batch_idx + 1) % gradient_updates_per_optimizer_step == 0:
             if automatic_mixed_precision:
-                # Take a step with the optimizer
-                # Warning: Optimizer.step() is skipped if the unscaled gradients of the optimizer parameters contain
-                # inf or Nan
-                scaler.step(pm.optimizer)
-                scaler.update()
+                # Take a step with the optimizer directly since we removed GradScaler
+                pm.optimizer.step()
             else:
                 pm.optimizer.step()
 
