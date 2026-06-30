@@ -168,20 +168,12 @@ class Tokenizer(nn.Module):
                 f"Expected last dimension to be {self.context_features} or {self.num_blocks}, got {context.shape[-1]}."
             )
         if context is not None:
-            detector_ids = context[..., -1]
-            if detector_ids.min() < 0.0 or detector_ids.max() > 2.0:
-                raise RuntimeError(
-                    f"DATA CORRUPTION DETECTED! Expected detector IDs [0,1,2]. "
-                    f"Received min: {detector_ids.min().item()}, max: {detector_ids.max().item()}. "
-                    f"The DataLoader is feeding strain/noise into the context tensor."
-                )
-            detector_ids = detector_ids.to(torch.long)
             # Transform block values from int to one_hot vectors
             detector_per_token = context[..., 2]
-            print("first 10 context vector", context[0, :10]) #printing the first 10 context vectors
             detector_one_hot = torch.eye(self.num_blocks, device=context.device)[
                 detector_per_token.to(torch.long)
             ]
+            print("first 10 context vector", context[0, :10]) #printing the first 10 context vectors
             context = torch.cat((context[..., :2], detector_one_hot), dim=-1)
             if context.shape[-1] != self.context_features:
                 raise ValueError(
@@ -631,8 +623,8 @@ class TransformerModel(nn.Module):
 
         if self.tokenizer is not None:
             if self.tokenizer.context_features is not None:
-                x = self.tokenizer(x, context=position.detach().clone())
-                #x = self.tokenizer(x, context=position)
+                #x = self.tokenizer(x, context=position.detach().clone())
+                x = self.tokenizer(x, context=position)
             else:
                 x = self.tokenizer(x)
         if self.positional_encoding is not None: #positional encoding is used to understand which frequency bins comes after another
